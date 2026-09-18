@@ -1,0 +1,5 @@
+.env
+database.sqlite
+uploads/
+scratch/
+.DS_Store
