@@ -95,20 +95,20 @@ $userHubId = $user['hub_id'] ?? null;
 <!-- QR Scanner Modal -->
 <div id="scanner-modal" class="fixed inset-0 z-[100] hidden">
     <!-- Backdrop -->
-    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeScannerModal()"></div>
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
     
     <!-- Modal Content -->
     <div class="absolute inset-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:w-[500px] h-full sm:h-[650px] bg-white sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-gray-900/5">
         
-        <div class="px-6 py-5 flex items-start justify-between bg-white z-10 relative">
+        <div id="modal-header" class="px-6 py-5 flex items-start justify-between bg-white z-10 relative transition-colors duration-300">
             <div>
                 <h3 class="text-lg font-bold text-gray-900 mb-1" id="modal-title">Scan Barcode / QR</h3>
-                <p class="text-sm text-gray-500 flex items-center gap-1">
-                    <i class="ri-map-pin-line text-gray-400"></i>
+                <p class="text-sm text-gray-500 flex items-center gap-1" id="modal-hub-container">
+                    <i class="ri-map-pin-line opacity-70"></i>
                     <span id="modal-hub-info">Loading lokasi...</span>
                 </p>
             </div>
-            <button onclick="closeScannerModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors shadow-sm border border-gray-100">
+            <button id="modal-close-btn" onclick="closeScannerModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors shadow-sm border border-gray-100">
                 <i class="ri-close-line text-lg"></i>
             </button>
         </div>
@@ -125,11 +125,8 @@ $userHubId = $user['hub_id'] ?? null;
                 <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Atau Ketik Resi Manual</p>
                 <div class="h-px bg-gray-200 flex-1"></div>
             </div>
-            <form onsubmit="event.preventDefault(); processScan(document.getElementById('manual-resi').value);" class="flex gap-2 relative justify-center">
-                <input type="text" id="manual-resi" placeholder="SJ-2026..." class="form-input flex-1 text-center font-mono uppercase tracking-widest text-base shadow-sm !py-3" autocomplete="off" oninput="fetchAutocomplete(this.value)" onblur="setTimeout(()=>document.getElementById('autocomplete-dropdown').classList.add('hidden'), 200)">
-                <button type="submit" class="btn-primary flex-shrink-0 shadow-md shadow-bdl-dark/20" style="padding:12px 20px">
-                    <i class="ri-send-plane-fill text-lg"></i>
-                </button>
+            <form onsubmit="event.preventDefault();" class="flex gap-2 relative justify-center">
+                <input type="text" id="manual-resi" placeholder="SJ-2026..." class="form-input flex-1 text-center font-mono uppercase tracking-widest text-base shadow-sm !py-3" autocomplete="off" oninput="handleScannerInput(this.value)" onblur="setTimeout(()=>document.getElementById('autocomplete-dropdown').classList.add('hidden'), 200)">
                 
                 <!-- Custom Autocomplete Dropdown -->
                 <div id="autocomplete-dropdown" class="hidden absolute bottom-full left-0 mb-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto text-left">
@@ -139,8 +136,7 @@ $userHubId = $user['hub_id'] ?? null;
     </div>
 </div>
 
-<!-- Audio for Beep -->
-<audio id="beep-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" preload="auto"></audio>
+
 
 <style>
     /* Clean up the HTML5 QrCode default styles */
@@ -155,6 +151,15 @@ $userHubId = $user['hub_id'] ?? null;
     let html5QrcodeScanner = null;
     let selectedStatus = null; // Store the clicked icon's status
 
+    const statusColors = {
+        'RECEIVED_AT_HUB': 'bg-blue-600',
+        'SORTED': 'bg-purple-600',
+        'IN_TRANSIT': 'bg-amber-600',
+        'OUT_FOR_DELIVERY': 'bg-indigo-600',
+        'DELIVERED': 'bg-emerald-600',
+        'PROBLEM': 'bg-rose-600'
+    };
+
     // Move modal to body to prevent z-index and fixed positioning issues from parent containers
     document.addEventListener("DOMContentLoaded", () => {
         const modal = document.getElementById('scanner-modal');
@@ -165,6 +170,17 @@ $userHubId = $user['hub_id'] ?? null;
         selectedStatus = status;
         document.getElementById('modal-title').innerText = title;
         
+        // Update modal color theme
+        const header = document.getElementById('modal-header');
+        const titleEl = document.getElementById('modal-title');
+        const hubContainer = document.getElementById('modal-hub-container');
+        const closeBtn = document.getElementById('modal-close-btn');
+        
+        header.className = 'px-6 py-5 flex items-start justify-between z-10 relative transition-colors duration-300 ' + (statusColors[status] || 'bg-slate-800');
+        titleEl.className = 'text-lg font-bold text-white mb-1';
+        hubContainer.className = 'text-sm text-white/80 flex items-center gap-1';
+        closeBtn.className = 'w-9 h-9 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors border border-white/10';
+
         // Update Hub Info
         const hubSelect = document.getElementById('scan-hub');
         const selectedHubName = hubSelect.options[hubSelect.selectedIndex]?.text || 'Gudang tidak diketahui';
@@ -207,7 +223,7 @@ $userHubId = $user['hub_id'] ?? null;
                 } 
             },
             (decodedText) => {
-                closeScannerModal();
+                // Kamera berhasil scan, tapi modal tidak tertutup
                 processScan(decodedText);
             },
             (errorMessage) => {
@@ -233,17 +249,29 @@ $userHubId = $user['hub_id'] ?? null;
         }
     }
 
-    let isProcessing = false;
     let lastScannedResi = "";
     let lastScannedStatus = "";
+    let scanTimeout = null;
+
+    function handleScannerInput(val) {
+        // Panggil autocomplete jika dirasa perlu
+        fetchAutocomplete(val);
+
+        // Auto submit jika ada jeda ketikan (alat scanner biasanya mengirim input dengan sangat cepat)
+        clearTimeout(scanTimeout);
+        if (val.trim().length >= 5) { // minimal karakter untuk auto-scan
+            scanTimeout = setTimeout(() => {
+                processScan(val);
+            }, 300); // 300ms debounce
+        }
+    }
 
     function processScan(scannedText) {
         if (!scannedText || scannedText.trim() === '') return;
         
+        const inputField = document.getElementById('manual-resi');
         const hubId = document.getElementById('scan-hub').value;
-        const status = selectedStatus; // use the status saved from the icon click
-        // For notes, we can leave it empty or add a field in the modal if needed, but the original UI had a notes field? 
-        // Wait, the original UI did not have a scan-notes field. I'll just send empty.
+        const status = selectedStatus; 
         const notes = '';
 
         if (!hubId) {
@@ -259,19 +287,16 @@ $userHubId = $user['hub_id'] ?? null;
         const currentResi = scannedText.trim();
         const currentStatus = status;
 
+        // KOSONGKAN INPUT SEGERA - agar scan berikutnya dari alat fisik tidak menumpuk teks
+        inputField.value = '';
+
         // Ignore if scanning the exact same resi with the exact same status consecutively
         if (currentResi === lastScannedResi && currentStatus === lastScannedStatus) {
-            // Only debounce but don't hit the server again to prevent spam toasts
             return;
         }
 
-        if (isProcessing) return;
-
-        isProcessing = true;
         lastScannedResi = currentResi;
         lastScannedStatus = currentStatus;
-
-        const inputField = document.getElementById('manual-resi');
 
         const formData = new FormData();
         formData.append('resi_number', currentResi);
@@ -290,11 +315,10 @@ $userHubId = $user['hub_id'] ?? null;
 
                 SwalToast.fire({
                     icon: 'success',
-                    title: `[${currentResi}] ${data.message}`
+                    title: data.message
                 });
-                
-                inputField.value = '';
             } else {
+                playErrorBeep();
                 SwalToast.fire({
                     icon: 'error',
                     title: data.message
@@ -302,6 +326,7 @@ $userHubId = $user['hub_id'] ?? null;
             }
         })
         .catch(err => {
+            playErrorBeep();
             SwalToast.fire({
                 icon: 'error',
                 title: 'Koneksi ke server gagal.'
@@ -311,14 +336,12 @@ $userHubId = $user['hub_id'] ?? null;
             // Re-focus manual input for next scan if using scanner gun
             inputField.focus();
             
-            // Debounce delay to prevent double scans
+            // Hapus memori resi terakhir setelah 3 detik agar resi yang sama bisa discan ulang jika disengaja
             setTimeout(() => {
-                isProcessing = false;
-                // We clear the last scanned memory after 3 seconds so they can re-scan if they REALLY want to
-                setTimeout(() => {
+                if (lastScannedResi === currentResi) {
                     lastScannedResi = "";
-                }, 3000);
-            }, 1000); 
+                }
+            }, 3000);
         });
     }
 
@@ -338,10 +361,11 @@ $userHubId = $user['hub_id'] ?? null;
     document.getElementById('manual-resi').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
+            clearTimeout(scanTimeout);
             processScan(this.value);
         }
     });
-    // Audio API for Scanner Beep
+    // Audio API for Scanner Beep (Sukses)
     function playBeep() {
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -352,11 +376,37 @@ $userHubId = $user['hub_id'] ?? null;
             osc.connect(gain);
             gain.connect(ctx.destination);
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(1000, ctx.currentTime); // 1000Hz beep
+            osc.frequency.setValueAtTime(1000, ctx.currentTime); // 1000Hz beep (tinggi)
             gain.gain.setValueAtTime(0.5, ctx.currentTime); // volume
             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
             osc.start();
             osc.stop(ctx.currentTime + 0.1);
+        } catch (e) {}
+    }
+
+    // Audio API for Scanner Error (Gagal)
+    function playErrorBeep() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            
+            const playLow = (startTime) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(250, startTime); // 250Hz beep (kasar & rendah)
+                gain.gain.setValueAtTime(0.5, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+                osc.start(startTime);
+                osc.stop(startTime + 0.15);
+            };
+
+            // Bunyi ganda untuk penanda error
+            playLow(ctx.currentTime);
+            playLow(ctx.currentTime + 0.2);
         } catch (e) {}
     }
     let autocompleteTimeout = null;
@@ -388,8 +438,7 @@ $userHubId = $user['hub_id'] ?? null;
                         div.onclick = function() {
                             document.getElementById('manual-resi').value = item.resi_number;
                             dropdown.classList.add('hidden');
-                            // Optionally auto-submit
-                            // processScan(item.resi_number);
+                            processScan(item.resi_number); // Auto submit saat klik autocomplete
                         };
                         dropdown.appendChild(div);
                     });

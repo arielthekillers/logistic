@@ -584,29 +584,74 @@ function renderSidebarFooter() {
     adjustLayout();
     window.addEventListener('resize', adjustLayout);
 
-    // ═══ SweetAlert2 Toast + Confirm System ═══════════════════
-    const SwalToast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 4000,
-        timerProgressBar: true,
-        customClass: {
-            popup: 'swal-bdl-toast',
-        },
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer);
-            toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-    });
+    // ═══ Stacking Toast System ═══════════════════
+    const toastContainer = document.createElement('div');
+    toastContainer.id = 'bdl-toast-container';
+    toastContainer.className = 'fixed top-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none items-end';
+    document.body.appendChild(toastContainer);
 
-    // Global showToast — gunakan dari mana saja
     window.showToast = function(msg, type = 'success') {
-        const icons  = { success: 'success', error: 'error', warning: 'warning', info: 'info' };
-        SwalToast.fire({
-            icon: icons[type] || 'success',
-            title: msg,
+        const toast = document.createElement('div');
+        
+        // Colors & Icons
+        let border = 'border-gray-100';
+        let iconHtml = '<i class="ri-information-fill text-blue-500 text-2xl"></i>';
+
+        if (type === 'success') {
+            border = 'border-emerald-100';
+            iconHtml = '<i class="ri-checkbox-circle-fill text-emerald-500 text-2xl"></i>';
+        } else if (type === 'error') {
+            border = 'border-red-100';
+            iconHtml = '<i class="ri-close-circle-fill text-red-500 text-2xl"></i>';
+        } else if (type === 'warning') {
+            border = 'border-amber-100';
+            iconHtml = '<i class="ri-error-warning-fill text-amber-500 text-2xl"></i>';
+        }
+
+        toast.className = `flex items-center gap-3 px-5 py-4 bg-white border ${border} shadow-xl shadow-black/5 rounded-2xl pointer-events-auto transform transition-all duration-300 translate-x-[120%] opacity-0 max-w-sm w-max`;
+        
+        toast.innerHTML = `
+            <div class="flex-shrink-0 flex items-center justify-center">${iconHtml}</div>
+            <div class="flex-1 text-[13.5px] font-semibold text-gray-800 leading-snug">${msg}</div>
+            <button class="flex-shrink-0 ml-2 text-gray-400 hover:text-gray-900 transition-colors bg-gray-50 hover:bg-gray-100 w-7 h-7 rounded-full flex items-center justify-center" onclick="closeToast(this.parentElement)">
+                <i class="ri-close-line"></i>
+            </button>
+        `;
+
+        // Prepend agar notif terbaru muncul di paling atas (bersusun)
+        toastContainer.prepend(toast); 
+
+        // Trigger animation
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-[120%]', 'opacity-0');
+                toast.classList.add('translate-x-0', 'opacity-100');
+            });
         });
+
+        // Auto remove
+        const autoRemove = setTimeout(() => {
+            closeToast(toast);
+        }, 4000);
+
+        // Hover pause
+        toast.addEventListener('mouseenter', () => clearTimeout(autoRemove));
+    };
+
+    window.closeToast = function(toastEl) {
+        if(!toastEl || !toastEl.parentElement) return;
+        toastEl.classList.remove('translate-x-0', 'opacity-100');
+        toastEl.classList.add('translate-x-[120%]', 'opacity-0');
+        setTimeout(() => {
+            if(toastEl.parentElement) toastEl.remove();
+        }, 300);
+    };
+
+    // Proxy SwalToast.fire agar kompatibel dengan kode lama
+    window.SwalToast = {
+        fire: function(obj) {
+            window.showToast(obj.title || obj.text, obj.icon || 'success');
+        }
     };
 
     // Tembak dari PHP flash data
