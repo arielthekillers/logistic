@@ -1,5 +1,5 @@
 <?php
-renderPublicHeader("Tracking Barang - Logistic Express");
+renderPublicHeader("Tracking Barang - PT. Barongko Darma Logistik", "Lacak lokasi dan status paket pengiriman Anda secara realtime dari PT. Barongko Darma Logistik.");
 ?>
 
 <!-- Leaflet CSS -->
