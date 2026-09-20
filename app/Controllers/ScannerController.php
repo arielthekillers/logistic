@@ -101,12 +101,36 @@ class ScannerController extends Controller {
                 ]);
             }
 
+            // Handle photo_proof
+            $photoPath = null;
+            if (!empty($_POST['photo_proof'])) {
+                $base64 = $_POST['photo_proof'];
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
+                    $base64 = substr($base64, strpos($base64, ',') + 1);
+                    $type = strtolower($type[1]);
+                    if (in_array($type, ['jpg', 'jpeg', 'png', 'gif'])) {
+                        $base64 = base64_decode($base64);
+                        if ($base64 !== false) {
+                            $fileName = 'proof_' . $shipment['id'] . '_' . time() . '.' . $type;
+                            $uploadDir = __DIR__ . '/../../../public/uploads/';
+                            if (!is_dir($uploadDir)) {
+                                mkdir($uploadDir, 0777, true);
+                            }
+                            if (file_put_contents($uploadDir . $fileName, $base64)) {
+                                $photoPath = 'uploads/' . $fileName;
+                            }
+                        }
+                    }
+                }
+            }
+
             $checkpointModel->create([
                 'shipment_id' => $shipment['id'],
                 'hub_id' => $hubId,
                 'user_id' => auth_user()['id'] ?? 1,
                 'status' => $status,
                 'location_name' => $hubName,
+                'photo_proof' => $photoPath,
                 'notes' => $actionLabel . ($notes ? ": {$notes}" : '')
             ]);
 

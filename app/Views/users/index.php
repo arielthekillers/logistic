@@ -140,6 +140,22 @@ renderSidebarHeader("User & Operator - PT. Barongko Darma Logistik");
 .uc-drop-item.danger { color: #dd2c24; }
 .uc-drop-item.danger:hover { background: #fff5f5; }
 .uc-drop-divider { height: 1px; background: #f0f0ee; margin: 2px 0; }
+
+/* Dark Mode Overrides */
+.dark .user-card { background: #1e293b; border-color: #334155; }
+.dark .user-card:hover { border-color: #475569; }
+.dark .uc-name { color: #f8fafc; }
+.dark .uc-kebab-btn { color: #94a3b8; }
+.dark .uc-kebab-btn:hover { background: #334155; color: #f8fafc; }
+.dark .uc-dropdown { background: #334155; border-color: #475569; }
+.dark .uc-drop-item { color: #f8fafc; }
+.dark .uc-drop-item:hover { background: #475569; }
+.dark .uc-drop-item.danger:hover { background: rgba(220, 38, 38, 0.2); }
+.dark .uc-drop-divider { background: #475569; }
+.dark .tag-hub, .dark .tag-phone { background: #334155; color: #e2e8f0; border-color: #475569; }
+.dark .tag-admin { background: rgba(220, 38, 38, 0.1); color: #fca5a5; border-color: rgba(220, 38, 38, 0.3); }
+.dark .tag-operator { background: rgba(22, 163, 74, 0.1); color: #86efac; border-color: rgba(22, 163, 74, 0.3); }
+.dark .tag-courier { background: rgba(180, 83, 9, 0.1); color: #fcd34d; border-color: rgba(180, 83, 9, 0.3); }
 </style>
 
 <div class="space-y-6">
@@ -147,8 +163,8 @@ renderSidebarHeader("User & Operator - PT. Barongko Darma Logistik");
     <!-- ─── Page Header ─────────────────────────────────── -->
     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-            <h1 class="page-title">User & Operator</h1>
-            <p class="page-subtitle">Kelola akun Admin, Operator Hub, dan Kurir BDL.</p>
+            <h1 class="page-title dark:text-white">User & Operator</h1>
+            <p class="page-subtitle dark:text-gray-400">Kelola akun Admin, Operator Hub, dan Kurir BDL.</p>
         </div>
         <button onclick="document.getElementById('modal-add-user').classList.remove('hidden')" class="btn-primary w-max">
             <i class="ri-user-add-line"></i> Tambah User
@@ -164,32 +180,27 @@ renderSidebarHeader("User & Operator - PT. Barongko Darma Logistik");
         $totalOps    = count(array_filter($users, fn($u) => $u['role'] === 'operator_hub'));
         $totalKurir  = count(array_filter($users, fn($u) => $u['role'] === 'courier'));
     ?>
-    <div class="flex items-center gap-1 flex-wrap" id="role-filter-tabs"
-         style="border-bottom:2px solid #f0f0ee;padding-bottom:2px">
+    <div class="flex items-center gap-1 flex-wrap border-b-2 border-gray-100 dark:border-slate-700 pb-0.5" id="role-filter-tabs">
 
-        <button onclick="filterRole('all',this)" data-tab="all" class="role-tab"
-            style="padding:7px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:#1a1a1a;border-bottom:2px solid #2b2c1e;margin-bottom:-2px;transition:all 0.15s">
-            Semua <span style="font-weight:500;color:#9a9a90">(<?= $totalAll ?>)</span>
+        <button onclick="filterRole('all',this)" data-tab="all" class="role-tab px-4 py-2 rounded-t-lg text-[13px] font-bold border-b-2 border-slate-900 text-slate-900 dark:border-white dark:text-white transition-all -mb-1">
+            Semua <span class="font-medium text-gray-500 dark:text-gray-400">(<?= $totalAll ?>)</span>
         </button>
 
         <?php if ($totalAdmins > 0): ?>
-        <button onclick="filterRole('admin',this)" data-tab="admin" class="role-tab"
-            style="padding:7px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:#6b6b65;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s">
-            Admin <span style="font-weight:500;color:#9a9a90">(<?= $totalAdmins ?>)</span>
+        <button onclick="filterRole('admin',this)" data-tab="admin" class="role-tab px-4 py-2 rounded-t-lg text-[13px] font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-all -mb-1">
+            Admin <span class="font-medium opacity-70">(<?= $totalAdmins ?>)</span>
         </button>
         <?php endif; ?>
 
         <?php if ($totalOps > 0): ?>
-        <button onclick="filterRole('operator_hub',this)" data-tab="operator_hub" class="role-tab"
-            style="padding:7px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:#6b6b65;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s">
-            Operator Hub <span style="font-weight:500;color:#9a9a90">(<?= $totalOps ?>)</span>
+        <button onclick="filterRole('operator_hub',this)" data-tab="operator_hub" class="role-tab px-4 py-2 rounded-t-lg text-[13px] font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-all -mb-1">
+            Operator Hub <span class="font-medium opacity-70">(<?= $totalOps ?>)</span>
         </button>
         <?php endif; ?>
 
         <?php if ($totalKurir > 0): ?>
-        <button onclick="filterRole('courier',this)" data-tab="courier" class="role-tab"
-            style="padding:7px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:#6b6b65;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s">
-            Kurir <span style="font-weight:500;color:#9a9a90">(<?= $totalKurir ?>)</span>
+        <button onclick="filterRole('courier',this)" data-tab="courier" class="role-tab px-4 py-2 rounded-t-lg text-[13px] font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-all -mb-1">
+            Kurir <span class="font-medium opacity-70">(<?= $totalKurir ?>)</span>
         </button>
         <?php endif; ?>
 
@@ -198,12 +209,12 @@ renderSidebarHeader("User & Operator - PT. Barongko Darma Logistik");
 
     <!-- ─── Cards Grid ───────────────────────────────────── -->
     <?php if (empty($users)): ?>
-        <div class="card p-14 text-center">
-            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:#f5f5f0">
-                <i class="ri-user-unfollow-line text-2xl text-gray-400"></i>
+        <div class="card p-14 text-center dark:bg-slate-800 dark:border-slate-700">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-gray-50 dark:bg-slate-700">
+                <i class="ri-user-unfollow-line text-2xl text-gray-400 dark:text-gray-500"></i>
             </div>
-            <p class="font-bold text-gray-600">Belum ada user terdaftar</p>
-            <p class="text-sm text-gray-400 mt-1">Klik "Tambah User" untuk menambahkan.</p>
+            <p class="font-bold text-gray-600 dark:text-gray-300">Belum ada user terdaftar</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Klik "Tambah User" untuk menambahkan.</p>
         </div>
     <?php else: ?>
         <?php
@@ -431,13 +442,11 @@ document.addEventListener('click', closeAllDropdowns);
 function filterRole(role, btn) {
     // Update tab styles
     document.querySelectorAll('.role-tab').forEach(t => {
-        t.style.color = '#6b6b65';
-        t.style.borderBottom = '2px solid transparent';
-        t.style.marginBottom = '-2px';
+        t.classList.remove('border-slate-900', 'text-slate-900', 'dark:border-white', 'dark:text-white');
+        t.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
     });
-    btn.style.color = '#1a1a1a';
-    btn.style.borderBottom = '2px solid #2b2c1e';
-    btn.style.marginBottom = '-2px';
+    btn.classList.add('border-slate-900', 'text-slate-900', 'dark:border-white', 'dark:text-white');
+    btn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
 
     // Filter cards
     document.querySelectorAll('.user-card').forEach(card => {
@@ -451,12 +460,7 @@ function filterRole(role, btn) {
 
 // Set default active tab style on load
 document.addEventListener('DOMContentLoaded', () => {
-    const first = document.querySelector('.role-tab[data-tab="all"]');
-    if (first) {
-        first.style.color = '#1a1a1a';
-        first.style.borderBottom = '2px solid #2b2c1e';
-        first.style.marginBottom = '-2px';
-    }
+    // Done via server-side/HTML
 });
 
 // ─── Delete Confirm — SweetAlert2 ────────────

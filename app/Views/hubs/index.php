@@ -7,8 +7,8 @@ renderSidebarHeader("Data Gudang & Hub - PT. Barongko Darma Logistik");
     <!-- ─── Page Header ─────────────────────────────────── -->
     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-            <h1 class="page-title">Gudang & Hub Transit</h1>
-            <p class="page-subtitle">Kelola lokasi gudang pusat, cabang & pusat sortir BDL.</p>
+            <h1 class="page-title dark:text-white">Gudang & Hub Transit</h1>
+            <p class="page-subtitle dark:text-gray-400">Kelola lokasi gudang pusat, cabang & pusat sortir BDL.</p>
         </div>
         <button onclick="document.getElementById('modal-add-hub').classList.remove('hidden')" class="btn-primary w-max">
             <i class="ri-add-line"></i> Tambah Hub
@@ -17,12 +17,12 @@ renderSidebarHeader("Data Gudang & Hub - PT. Barongko Darma Logistik");
 
     <!-- ─── Cards Grid ───────────────────────────────────── -->
     <?php if (empty($hubs)): ?>
-        <div class="card p-14 text-center">
-            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:#f5f5f0">
-                <i class="ri-building-4-line text-2xl text-gray-400"></i>
+        <div class="card dark:bg-slate-800 dark:border-slate-700 p-14 text-center">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-gray-50 dark:bg-slate-700">
+                <i class="ri-building-4-line text-2xl text-gray-400 dark:text-gray-500"></i>
             </div>
-            <p class="font-bold text-gray-600">Belum ada data Hub</p>
-            <p class="text-sm text-gray-400 mt-1">Klik "Tambah Hub" untuk menambahkan.</p>
+            <p class="font-bold text-gray-600 dark:text-gray-300">Belum ada data Hub</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Klik "Tambah Hub" untuk menambahkan.</p>
         </div>
     <?php else: 
         $totalAll = count($hubs);
@@ -32,32 +32,27 @@ renderSidebarHeader("Data Gudang & Hub - PT. Barongko Darma Logistik");
     ?>
     
     <!-- ─── Filter Tabs ───────────────────────────────── -->
-    <div class="flex items-center gap-1 flex-wrap" id="type-filter-tabs"
-         style="border-bottom:2px solid #f0f0ee;padding-bottom:2px">
+    <div class="flex items-center gap-1 flex-wrap border-b-2 border-gray-100 dark:border-slate-700 pb-0.5" id="type-filter-tabs">
 
-        <button onclick="filterType('all',this)" data-tab="all" class="type-tab"
-            style="padding:7px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:#1a1a1a;border-bottom:2px solid #2b2c1e;margin-bottom:-2px;transition:all 0.15s">
-            Semua <span style="font-weight:500;color:#9a9a90">(<?= $totalAll ?>)</span>
+        <button onclick="filterType('all',this)" data-tab="all" class="type-tab px-4 py-2 rounded-t-lg text-[13px] font-bold border-b-2 border-slate-900 text-slate-900 dark:border-white dark:text-white transition-all -mb-1">
+            Semua <span class="font-medium text-gray-500 dark:text-gray-400">(<?= $totalAll ?>)</span>
         </button>
 
         <?php if ($totalCentral > 0): ?>
-        <button onclick="filterType('CENTRAL_HUB',this)" data-tab="CENTRAL_HUB" class="type-tab"
-            style="padding:7px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:#6b6b65;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s">
-            Central Hub <span style="font-weight:500;color:#9a9a90">(<?= $totalCentral ?>)</span>
+        <button onclick="filterType('CENTRAL_HUB',this)" data-tab="CENTRAL_HUB" class="type-tab px-4 py-2 rounded-t-lg text-[13px] font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-all -mb-1">
+            Central Hub <span class="font-medium opacity-70">(<?= $totalCentral ?>)</span>
         </button>
         <?php endif; ?>
 
         <?php if ($totalSorting > 0): ?>
-        <button onclick="filterType('SORTING_CENTER',this)" data-tab="SORTING_CENTER" class="type-tab"
-            style="padding:7px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:#6b6b65;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s">
-            Sorting Center <span style="font-weight:500;color:#9a9a90">(<?= $totalSorting ?>)</span>
+        <button onclick="filterType('SORTING_CENTER',this)" data-tab="SORTING_CENTER" class="type-tab px-4 py-2 rounded-t-lg text-[13px] font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-all -mb-1">
+            Sorting Center <span class="font-medium opacity-70">(<?= $totalSorting ?>)</span>
         </button>
         <?php endif; ?>
 
         <?php if ($totalBranch > 0): ?>
-        <button onclick="filterType('BRANCH_HUB',this)" data-tab="BRANCH_HUB" class="type-tab"
-            style="padding:7px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:#6b6b65;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s">
-            Branch Hub <span style="font-weight:500;color:#9a9a90">(<?= $totalBranch ?>)</span>
+        <button onclick="filterType('BRANCH_HUB',this)" data-tab="BRANCH_HUB" class="type-tab px-4 py-2 rounded-t-lg text-[13px] font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-all -mb-1">
+            Branch Hub <span class="font-medium opacity-70">(<?= $totalBranch ?>)</span>
         </button>
         <?php endif; ?>
 
@@ -65,30 +60,32 @@ renderSidebarHeader("Data Gudang & Hub - PT. Barongko Darma Logistik");
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <?php foreach ($hubs as $h): 
-                $photoUrl = !empty($h['photo']) ? url('/' . $h['photo']) : 'https://placehold.co/400x400/f0f0ee/9a9a90?text=' . urlencode(strtoupper(substr($h['name'], 0, 2)));
+                $hasPhoto = !empty($h['photo']);
+                $photoUrl = $hasPhoto ? url('/' . $h['photo']) : '';
+                $initials = strtoupper(substr($h['name'], 0, 2));
                 
-                $typeColor = '#6b6b65';
-                $typeBg = '#f5f5f2';
-                if ($h['type'] === 'CENTRAL_HUB') { $typeColor = '#dd2c24'; $typeBg = '#fef2f2'; }
-                if ($h['type'] === 'SORTING_CENTER') { $typeColor = '#f59e0b'; $typeBg = '#fffbeb'; }
-                if ($h['type'] === 'BRANCH_HUB') { $typeColor = '#40bf4e'; $typeBg = '#f0fdf4'; }
+                $typeColor = 'text-gray-600 dark:text-gray-300';
+                $typeBg = 'bg-gray-100 dark:bg-slate-700';
+                if ($h['type'] === 'CENTRAL_HUB') { $typeColor = 'text-red-600 dark:text-red-400'; $typeBg = 'bg-red-50 dark:bg-red-900/30'; }
+                if ($h['type'] === 'SORTING_CENTER') { $typeColor = 'text-amber-600 dark:text-amber-400'; $typeBg = 'bg-amber-50 dark:bg-amber-900/30'; }
+                if ($h['type'] === 'BRANCH_HUB') { $typeColor = 'text-emerald-600 dark:text-emerald-400'; $typeBg = 'bg-emerald-50 dark:bg-emerald-900/30'; }
             ?>
-            <div class="card card-hover overflow-hidden flex flex-row relative min-h-[12rem] hub-card" data-type="<?= $h['type'] ?>">
+            <div class="card card-hover dark:bg-slate-800 dark:border-slate-700 overflow-hidden flex flex-row relative min-h-[12rem] hub-card" data-type="<?= $h['type'] ?>">
                 
                 <!-- Kebab Menu -->
-                <button class="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/90 backdrop-blur shadow flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors" 
+                <button class="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur shadow flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors" 
                         onclick="toggleDropdown('dd-hub-<?= $h['id'] ?>', event)" title="Opsi">
                     <i class="ri-more-2-fill"></i>
                 </button>
 
                 <!-- Dropdown -->
-                <div id="dd-hub-<?= $h['id'] ?>" class="uc-dropdown hidden absolute top-11 right-3 z-20 w-36 bg-white rounded-xl shadow-lg border border-gray-100 py-1">
-                    <button class="uc-drop-item w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2" 
+                <div id="dd-hub-<?= $h['id'] ?>" class="uc-dropdown hidden absolute top-11 right-3 z-20 w-36 bg-white dark:bg-slate-700 rounded-xl shadow-lg border border-gray-100 dark:border-slate-600 py-1">
+                    <button class="uc-drop-item w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-600 dark:text-gray-200 flex items-center gap-2" 
                             onclick="openEditHubModal(<?= htmlspecialchars(json_encode($h), ENT_QUOTES) ?>); closeAllDropdowns();">
-                        <i class="ri-edit-line text-blue-500"></i> Edit Hub
+                        <i class="ri-edit-line text-blue-500 dark:text-blue-400"></i> Edit Hub
                     </button>
-                    <div class="h-px bg-gray-100 my-1"></div>
-                    <button type="button" class="uc-drop-item danger w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                    <div class="h-px bg-gray-100 dark:bg-slate-600 my-1"></div>
+                    <button type="button" class="uc-drop-item danger w-full text-left px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-2"
                         onclick="openDeleteHubModal(<?= $h['id'] ?>, '<?= e($h['name']) ?>')">
                         <i class="ri-delete-bin-line"></i> Hapus
                     </button>
@@ -97,17 +94,17 @@ renderSidebarHeader("Data Gudang & Hub - PT. Barongko Darma Logistik");
                 <!-- Left: Info -->
                 <div class="flex-1 p-5 flex flex-col justify-center min-w-0 pr-6">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="font-mono text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded"><?= e($h['code']) ?></span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="color:<?= $typeColor ?>;background:<?= $typeBg ?>"><?= str_replace('_', ' ', $h['type']) ?></span>
+                        <span class="font-mono text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded"><?= e($h['code']) ?></span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full <?= $typeColor ?> <?= $typeBg ?>"><?= str_replace('_', ' ', $h['type']) ?></span>
                     </div>
-                    <h3 class="font-bold text-gray-900 text-lg leading-tight mb-2 truncate" title="<?= e($h['name']) ?>"><?= e($h['name']) ?></h3>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-lg leading-tight mb-2 truncate" title="<?= e($h['name']) ?>"><?= e($h['name']) ?></h3>
                     <div class="space-y-1 mt-auto">
-                        <p class="text-sm text-gray-500 flex items-center gap-1.5 truncate">
-                            <i class="ri-map-pin-2-line text-gray-400"></i> <?= e($h['city']) ?> <?= !empty($h['address']) ? '- ' . e($h['address']) : '' ?>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5 truncate">
+                            <i class="ri-map-pin-2-line text-gray-400 dark:text-gray-500"></i> <?= e($h['city']) ?> <?= !empty($h['address']) ? '- ' . e($h['address']) : '' ?>
                         </p>
                         <?php if (!empty($h['phone'])): ?>
-                        <p class="text-sm text-gray-500 flex items-center gap-1.5 truncate">
-                            <i class="ri-phone-line text-gray-400"></i> <?= e($h['phone']) ?>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5 truncate">
+                            <i class="ri-phone-line text-gray-400 dark:text-gray-500"></i> <?= e($h['phone']) ?>
                         </p>
                         <?php endif; ?>
                     </div>
@@ -118,26 +115,32 @@ renderSidebarHeader("Data Gudang & Hub - PT. Barongko Darma Logistik");
                         $displayUsers = array_slice($hUsers, 0, 4);
                         $rem = count($hUsers) - 4;
                     ?>
-                    <div class="flex items-center mt-3 pt-3 border-t border-gray-100">
+                    <div class="flex items-center mt-3 pt-3 border-t border-gray-100 dark:border-slate-700">
                         <div class="flex -space-x-1.5">
                             <?php foreach($displayUsers as $hu): 
                                 $ava = !empty($hu['avatar']) ? url('/' . $hu['avatar']) : 'https://placehold.co/100x100/f0f0ee/9a9a90?text='.urlencode(strtoupper(substr($hu['name'], 0, 1)));
                             ?>
-                            <img class="w-6 h-6 rounded-full border-2 border-white bg-gray-100 object-cover" src="<?= $ava ?>" title="<?= e($hu['name']) ?> (<?= e($hu['role']) ?>)" alt="<?= e($hu['name']) ?>">
+                            <img class="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 bg-gray-100 dark:bg-slate-700 object-cover" src="<?= $ava ?>" title="<?= e($hu['name']) ?> (<?= e($hu['role']) ?>)" alt="<?= e($hu['name']) ?>">
                             <?php endforeach; ?>
                             <?php if($rem > 0): ?>
-                            <div class="w-6 h-6 rounded-full border-2 border-white bg-gray-50 text-gray-600 flex items-center justify-center text-[9px] font-bold z-10 relative">+<?= $rem ?></div>
+                            <div class="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-400 flex items-center justify-center text-[9px] font-bold z-10 relative">+<?= $rem ?></div>
                             <?php endif; ?>
                         </div>
-                        <span class="text-[11px] text-gray-400 ml-2 font-medium"><?= count($hUsers) ?> Petugas</span>
+                        <span class="text-[11px] text-gray-400 dark:text-gray-500 ml-2 font-medium"><?= count($hUsers) ?> Petugas</span>
                     </div>
                     <?php endif; ?>
                     
                 </div>
 
                 <!-- Right: Image (Full height) -->
-                <div class="w-1/3 sm:w-2/5 flex-shrink-0 bg-gray-100 relative border-l border-gray-100">
-                    <img src="<?= $photoUrl ?>" class="w-full h-full object-cover absolute inset-0" alt="<?= e($h['name']) ?>">
+                <div class="w-1/3 sm:w-2/5 flex-shrink-0 bg-gray-100 dark:bg-slate-700/50 relative border-l border-gray-100 dark:border-slate-700 overflow-hidden flex items-center justify-center">
+                    <?php if ($hasPhoto): ?>
+                        <img src="<?= $photoUrl ?>" class="w-full h-full object-cover absolute inset-0" alt="<?= e($h['name']) ?>">
+                    <?php else: ?>
+                        <div class="text-[80px] font-black text-gray-200 dark:text-slate-600 tracking-tighter mix-blend-multiply dark:mix-blend-normal leading-none" style="transform: scale(1.5) rotate(-10deg) translateY(10%)">
+                            <?= $initials ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
             </div>

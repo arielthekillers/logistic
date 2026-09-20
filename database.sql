@@ -133,3 +133,8 @@ INSERT INTO `checkpoints` (`id`, `shipment_id`, `hub_id`, `user_id`, `status`, `
 (1, 1, 1, 1, 'DRAFT', 'Jakarta Central Hub', 'Paket berhasil dibuat dan diserahkan pengirim'),
 (2, 1, 1, 2, 'RECEIVED_AT_HUB', 'Jakarta Central Hub', 'Paket telah diterima di Hub Jakarta')
 ON DUPLICATE KEY UPDATE `id` = VALUES(`id`);
+
+-- Indexes for Performance Optimization
+ALTER TABLE `shipments` ADD INDEX `idx_status` (`status`);
+ALTER TABLE `checkpoints` ADD INDEX `idx_scanned_at` (`scanned_at`);
+ALTER TABLE `checkpoints` ADD INDEX `idx_status` (`status`);

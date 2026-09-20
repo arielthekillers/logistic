@@ -132,6 +132,7 @@ $userHubId = $user['hub_id'] ?? null;
                 <div id="autocomplete-dropdown" class="hidden absolute bottom-full left-0 mb-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto text-left">
                 </div>
             </form>
+            <input type="file" id="photo-proof-input" accept="image/*" capture="environment" class="hidden">
         </div>
     </div>
 </div>
@@ -303,6 +304,78 @@ $userHubId = $user['hub_id'] ?? null;
         formData.append('status', currentStatus);
         formData.append('hub_id', hubId);
 
+        // Jika paket DITERIMA atau BERMASALAH, minta foto bukti
+        if (currentStatus === 'DELIVERED' || currentStatus === 'PROBLEM') {
+            const photoInput = document.getElementById('photo-proof-input');
+            photoInput.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) {
+                    SwalToast.fire({ icon: 'warning', title: 'Bukti foto wajib dilampirkan!' });
+                    lastScannedResi = "";
+                    return;
+                }
+                
+                // Client-side Compression with Canvas
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // 60% quality
+                        
+                        formData.append('photo_proof', dataUrl);
+                        submitScan(formData, currentResi, currentStatus, hubId, inputField);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+                photoInput.value = '';
+            };
+            
+            // Buka kamera
+            photoInput.click();
+            return;
+        }
+
+        submitScan(formData, currentResi, currentStatus, hubId, inputField);
+    }
+
+    function submitScan(formData, currentResi, currentStatus, hubId, inputField) {
+        // Check if offline
+        if (!navigator.onLine) {
+            saveToOfflineQueue(currentResi, currentStatus, hubId, formData.get('photo_proof') || null);
+            playBeep();
+            SwalToast.fire({
+                icon: 'info',
+                title: 'Offline: Disimpan di antrean perangkat.'
+            });
+            inputField.focus();
+            setTimeout(() => {
+                if (lastScannedResi === currentResi) lastScannedResi = "";
+            }, 3000);
+            return;
+        }
+
         fetch('<?= url("/scanner/process") ?>', {
             method: 'POST',
             body: formData
@@ -310,45 +383,81 @@ $userHubId = $user['hub_id'] ?? null;
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success') {
-                // Play beep sound
                 playBeep();
-
-                SwalToast.fire({
-                    icon: 'success',
-                    title: data.message
-                });
+                SwalToast.fire({ icon: 'success', title: data.message });
             } else {
                 playErrorBeep();
-                SwalToast.fire({
-                    icon: 'error',
-                    title: data.message
-                });
+                SwalToast.fire({ icon: 'error', title: data.message });
             }
         })
         .catch(err => {
             playErrorBeep();
-            SwalToast.fire({
-                icon: 'error',
-                title: 'Koneksi ke server gagal.'
-            });
+            SwalToast.fire({ icon: 'error', title: 'Koneksi ke server gagal.' });
         })
         .finally(() => {
-            // Re-focus manual input for next scan if using scanner gun
             inputField.focus();
-            
-            // Hapus memori resi terakhir setelah 3 detik agar resi yang sama bisa discan ulang jika disengaja
             setTimeout(() => {
-                if (lastScannedResi === currentResi) {
-                    lastScannedResi = "";
-                }
+                if (lastScannedResi === currentResi) lastScannedResi = "";
             }, 3000);
         });
     }
 
-    // Auto-focus on page load
+    // Auto-focus on page load & Setup Offline Sync
     window.onload = () => {
         document.getElementById('manual-resi').focus();
+        window.addEventListener('online', syncOfflineQueue);
+        if (navigator.onLine) syncOfflineQueue();
     };
+
+    // Offline Queue System
+    function saveToOfflineQueue(resi, status, hubId, photoBase64) {
+        let queue = JSON.parse(localStorage.getItem('bdl_scan_queue') || '[]');
+        queue.push({ resi, status, hubId, photoBase64, time: new Date().getTime() });
+        localStorage.setItem('bdl_scan_queue', JSON.stringify(queue));
+        updateQueueIndicator();
+    }
+
+    function updateQueueIndicator() {
+        let queue = JSON.parse(localStorage.getItem('bdl_scan_queue') || '[]');
+        let indicator = document.getElementById('offline-indicator');
+        
+        if (queue.length > 0) {
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'offline-indicator';
+                indicator.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 bg-amber-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 z-50';
+                document.body.appendChild(indicator);
+            }
+            indicator.innerHTML = `<i class="ri-wifi-off-line"></i> ${queue.length} scan offline menunggu sinkronisasi`;
+        } else if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    function syncOfflineQueue() {
+        let queue = JSON.parse(localStorage.getItem('bdl_scan_queue') || '[]');
+        if (queue.length === 0) return;
+
+        let syncToast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+        syncToast.fire({ icon: 'info', title: `Mensinkronisasi ${queue.length} scan tertunda...` });
+
+        Promise.all(queue.map(item => {
+            const fd = new FormData();
+            fd.append('resi_number', item.resi);
+            fd.append('status', item.status);
+            fd.append('hub_id', item.hubId);
+            if (item.photoBase64) fd.append('photo_proof', item.photoBase64);
+            return fetch('<?= url("/scanner/process") ?>', { method: 'POST', body: fd }).catch(e => null);
+        })).then(() => {
+            localStorage.removeItem('bdl_scan_queue');
+            updateQueueIndicator();
+            syncToast.fire({ icon: 'success', title: 'Sinkronisasi offline berhasil!' });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        updateQueueIndicator();
+    });
     
     // Auto-focus on click anywhere (unless clicking a button/select)
     document.addEventListener('click', (e) => {

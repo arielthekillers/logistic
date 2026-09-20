@@ -36,6 +36,10 @@ class App {
         $this->router->get('/shipments/detail', ['App\Controllers\ShipmentController', 'detail']);
         $this->router->get('/shipments/label', ['App\Controllers\ShipmentController', 'printLabel']);
         $this->router->get('/shipments/barcode', ['App\Controllers\ShipmentController', 'barcode']);
+        $this->router->get('/shipments/dataTable', ['App\Controllers\ShipmentController', 'dataTable']);
+        $this->router->get('/shipments/export', ['App\Controllers\ShipmentController', 'export']);
+        $this->router->post('/shipments/bulkDelete', ['App\Controllers\ShipmentController', 'bulkDelete']);
+        $this->router->post('/shipments/importCSV', ['App\Controllers\ShipmentController', 'importCSV']);
 
         // Scanner / Operasional Routes
         $this->router->get('/scanner', ['App\Controllers\ScannerController', 'index']);

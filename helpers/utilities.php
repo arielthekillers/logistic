@@ -100,22 +100,22 @@ function standardize_phone($phone) {
 function get_status_badge($status) {
     switch ($status) {
         case 'DRAFT':
-            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-700">Draft</span>';
+            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300">Draft</span>';
         case 'RECEIVED_AT_HUB':
-            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Tiba di Hub</span>';
+            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400">Tiba di Hub</span>';
         case 'SORTED':
-            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Disortir</span>';
+            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400">Disortir</span>';
         case 'IN_TRANSIT':
-            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">Dalam Perjalanan</span>';
+            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400">Dalam Perjalanan</span>';
         case 'OUT_FOR_DELIVERY':
-            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Dalam Pengantaran</span>';
+            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400">Dalam Pengantaran</span>';
         case 'DELIVERED':
-            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Diterima</span>';
+            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-400">Diterima</span>';
         case 'CANCELLED':
-            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800">Dibatalkan</span>';
+            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-400">Dibatalkan</span>';
         case 'PROBLEM':
-            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-600 text-white shadow-sm border border-red-700 animate-pulse">Bermasalah</span>';
+            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-600 dark:bg-red-500/20 text-white dark:text-red-400 shadow-sm border border-red-700 dark:border-red-500/50 animate-pulse">Bermasalah</span>';
         default:
-            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">' . e($status) . '</span>';
+            return '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400">' . e($status) . '</span>';
     }
 }

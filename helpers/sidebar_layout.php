@@ -22,14 +22,26 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <!-- HTML5-QRCode -->
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- PWA Manifest & Service Worker -->
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('<?= url('/sw.js') ?>')
+                    .then(reg => console.log('SW Registered', reg))
+                    .catch(err => console.error('SW Registration Failed', err));
+            });
+        }
+    </script>
+    
     <!-- QRCode.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -50,6 +62,13 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
                 }
             }
         }
+        
+        // Initial Dark Mode check
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
     </script>
 
     <style>
@@ -60,19 +79,24 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             background-color: #f0f0ee;
             color: #1a1a1a;
             -webkit-font-smoothing: antialiased;
+            transition: background-color 0.3s, color 0.3s;
         }
+        
+        .dark body { background-color: #0f172a; color: #f8fafc; }
 
         /* ─── Sidebar ─────────────────────────────── */
         #sidebar {
             background: #ffffff;
             border-right: 1px solid #e8e8e4;
-            width: 240px;
+            transition: background-color 0.3s, border-color 0.3s;
         }
+        .dark #sidebar { background: #1e293b; border-right: 1px solid #334155; }
 
         .sidebar-brand {
             padding: 20px 20px 16px;
             border-bottom: 1px solid #f0f0ee;
         }
+        .dark .sidebar-brand { border-bottom-color: #334155; }
 
         .sidebar-logo-box {
             display: flex;
@@ -93,7 +117,9 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
 
         .sidebar-logo-text { line-height: 1.2; }
         .sidebar-logo-text .name { font-size: 13px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.3px; }
+        .dark .sidebar-logo-text .name { color: #f8fafc; }
         .sidebar-logo-text .sub  { font-size: 10px; font-weight: 500; color: #9a9a90; }
+        .dark .sidebar-logo-text .sub { color: #cbd5e1; }
 
         /* Nav */
         .nav-section-label {
@@ -118,6 +144,7 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             transition: all 0.18s ease;
             margin: 1px 8px;
         }
+        .dark .nav-link { color: #94a3b8; }
 
         .nav-link i { font-size: 16px; flex-shrink: 0; }
 
@@ -125,14 +152,17 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             background: #f5f5f2;
             color: #1a1a1a;
         }
+        .dark .nav-link:hover { background: #334155; color: #f8fafc; }
 
         .nav-link.active {
             background: #2b2c1e;
             color: #ffffff;
             font-weight: 700;
         }
+        .dark .nav-link.active { background: #4f46e5; color: #ffffff; }
 
         .nav-link.active i { color: #40bf4e; }
+        .dark .nav-link.active i { color: #a5b4fc; }
 
         /* Sidebar User Footer */
         .sidebar-user {
@@ -142,9 +172,11 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             align-items: center;
             gap: 10px;
         }
+        .dark .sidebar-user { border-top-color: #334155; }
 
         .sidebar-user-info { flex: 1; min-width: 0; line-height: 1.2; }
         .sidebar-user-info .uname { font-size: 13px; font-weight: 700; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 1px; display: block; }
+        .dark .sidebar-user-info .uname { color: #f8fafc; }
         .sidebar-user-info .urole { font-size: 11px; color: #9a9a90; font-weight: 500; display: block; }
 
         /* ─── Top bar (mobile) ─────────────────────── */
@@ -154,6 +186,9 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             padding: 12px 16px;
             z-index: 40;
         }
+        .dark #mobile-topbar { background: #1e293b; border-bottom-color: #334155; }
+        .dark #mobile-topbar span.text-gray-900 { color: #f8fafc; }
+        .dark #mobile-topbar button.text-gray-600 { color: #cbd5e1; }
 
         /* ─── Main Content ─────────────────────────── */
         #main-content {
@@ -173,6 +208,7 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             border: 1px solid #ebebea;
             box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
+        .dark .card { background: #1e293b; border-color: #334155; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
 
         .card-hover {
             transition: box-shadow 0.2s, transform 0.2s;
@@ -181,6 +217,7 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             box-shadow: 0 6px 24px rgba(0,0,0,0.08);
             transform: translateY(-2px);
         }
+        .dark .card-hover:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.6); }
 
         /* ─── Stat Card ─────────────────────────────── */
         .stat-icon {
@@ -202,12 +239,14 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             border-radius: 12px;
             font-size: 13.5px;
             font-weight: 700;
-            border: none;
+            border: 1.5px solid transparent;
             cursor: pointer;
             transition: all 0.18s;
             text-decoration: none;
         }
         .btn-primary:hover { background: #3d3f2a; box-shadow: 0 4px 14px rgba(43,44,30,0.25); }
+        .dark .btn-primary { background: transparent; color: #a5b4fc; border-color: #6366f1; }
+        .dark .btn-primary:hover { background: rgba(99,102,241,0.1); box-shadow: 0 4px 14px rgba(99,102,241,0.2); }
 
         .btn-accent {
             display: inline-flex;
@@ -219,12 +258,14 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             border-radius: 12px;
             font-size: 13.5px;
             font-weight: 700;
-            border: none;
+            border: 1.5px solid transparent;
             cursor: pointer;
             transition: all 0.18s;
             text-decoration: none;
         }
         .btn-accent:hover { background: #c7221b; box-shadow: 0 4px 14px rgba(221,44,36,0.3); }
+        .dark .btn-accent { background: transparent; color: #fca5a5; border-color: #ef4444; }
+        .dark .btn-accent:hover { background: rgba(239,68,68,0.1); box-shadow: 0 4px 14px rgba(239,68,68,0.2); }
 
         .btn-green {
             display: inline-flex;
@@ -236,12 +277,14 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             border-radius: 12px;
             font-size: 13.5px;
             font-weight: 700;
-            border: none;
+            border: 1.5px solid transparent;
             cursor: pointer;
             transition: all 0.18s;
             text-decoration: none;
         }
         .btn-green:hover { background: #34a340; box-shadow: 0 4px 14px rgba(64,191,78,0.3); }
+        .dark .btn-green { background: transparent; color: #86efac; border-color: #22c55e; }
+        .dark .btn-green:hover { background: rgba(34,197,94,0.1); box-shadow: 0 4px 14px rgba(34,197,94,0.2); }
 
         .btn-outline {
             display: inline-flex;
@@ -259,6 +302,8 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             text-decoration: none;
         }
         .btn-outline:hover { background: #f5f5f2; border-color: #ccc; }
+        .dark .btn-outline { background: transparent; color: #f8fafc; border-color: #475569; }
+        .dark .btn-outline:hover { background: rgba(71,85,105,0.2); }
 
         /* ─── Table ───────────────────────────────── */
         .data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
@@ -273,10 +318,14 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             text-align: left;
             background: #fafaf8;
         }
+        .dark .data-table thead th { background: #0f172a; border-bottom-color: #334155; color: #94a3b8; }
         .data-table tbody tr { border-bottom: 1px solid #f5f5f2; transition: background 0.15s; }
+        .dark .data-table tbody tr { border-bottom-color: #334155; }
         .data-table tbody tr:last-child { border-bottom: none; }
         .data-table tbody tr:hover { background: #fafaf8; }
+        .dark .data-table tbody tr:hover { background: #1e293b; }
         .data-table tbody td { padding: 13px 18px; color: #3a3a35; vertical-align: middle; }
+        .dark .data-table tbody td { color: #cbd5e1; }
 
         /* ─── Form Inputs ─────────────────────────── */
         .form-label {
@@ -288,6 +337,7 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             letter-spacing: 0.06em;
             margin-bottom: 6px;
         }
+        .dark .form-label { color: #94a3b8; }
 
         .form-input {
             width: 100%;
@@ -302,16 +352,21 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             outline: none;
             transition: border-color 0.18s, box-shadow 0.18s;
         }
+        .dark .form-input { background: #0f172a; border-color: #334155; color: #f8fafc; }
+        
         .form-input:focus {
             border-color: #2b2c1e;
             background: #fff;
             box-shadow: 0 0 0 3px rgba(43,44,30,0.08);
         }
+        .dark .form-input:focus { border-color: #4f46e5; background: #1e293b; box-shadow: 0 0 0 3px rgba(79,70,229,0.2); }
+        
         .form-input:disabled, .form-input[readonly] {
             background: #f0f0ee;
             color: #9a9a90;
             cursor: not-allowed;
         }
+        .dark .form-input:disabled, .dark .form-input[readonly] { background: #1e293b; color: #64748b; border-color: #334155; }
 
         /* ─── Modal ───────────────────────────────── */
         .modal-overlay {
@@ -335,6 +390,8 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             overflow: hidden;
             animation: modalIn 0.28s cubic-bezier(0.16,1,0.3,1);
         }
+        .dark .modal-box { background: #1e293b; box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05); }
+
         @keyframes modalIn {
             from { opacity: 0; transform: translateY(24px) scale(0.97); }
             to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -347,12 +404,16 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             align-items: center;
             justify-content: space-between;
         }
+        .dark .modal-head { border-bottom-color: #334155; }
+        
         .modal-head h3 {
             font-size: 16px;
             font-weight: 800;
             color: #1a1a1a;
             letter-spacing: -0.3px;
         }
+        .dark .modal-head h3 { color: #f8fafc; }
+
         .modal-head .close-btn {
             width: 32px; height: 32px;
             border-radius: 8px;
@@ -363,7 +424,8 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             color: #6b6b65;
             transition: all 0.15s;
         }
-        .modal-head .close-btn:hover { background: #f0f0ee; color: #1a1a1a; }
+        .dark .modal-head .close-btn { background: #0f172a; border-color: #334155; color: #94a3b8; }
+        .dark .modal-head .close-btn:hover { background: #334155; color: #f8fafc; }
 
         .modal-body { padding: 22px 24px; }
         .modal-footer {
@@ -373,6 +435,7 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             justify-content: flex-end;
             gap: 10px;
         }
+        .dark .modal-footer { border-top-color: #334155; }
 
         /* ─── Flash / Alert ───────────────────────── */
         .alert {
@@ -385,7 +448,9 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             font-weight: 600;
         }
         .alert-success { background: #f0fdf3; color: #15803d; border: 1px solid #bbf7d0; }
+        .dark .alert-success { background: rgba(21,128,61,0.2); color: #86efac; border-color: rgba(21,128,61,0.5); }
         .alert-error   { background: #fff5f5; color: #b91c1c; border: 1px solid #fecaca; }
+        .dark .alert-error { background: rgba(185,28,28,0.2); color: #fca5a5; border-color: rgba(185,28,28,0.5); }
         .alert i { font-size: 18px; flex-shrink: 0; }
 
         /* ─── Badge ───────────────────────────────── */
@@ -405,6 +470,7 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             letter-spacing: -0.5px;
             line-height: 1.2;
         }
+        .dark .page-title { color: #f8fafc; }
         .page-subtitle {
             font-size: 13px;
             color: #9a9a90;
@@ -412,10 +478,24 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
             margin-top: 3px;
         }
 
+        /* ─── Universal Dark Mode Helpers ─── */
+        .dark .text-gray-900 { color: #f8fafc !important; }
+        .dark .text-gray-800 { color: #e2e8f0 !important; }
+        .dark .text-gray-700 { color: #cbd5e1 !important; }
+        .dark .bg-white { background-color: #1e293b !important; }
+        .dark .bg-gray-50 { background-color: #0f172a !important; }
+        .dark .border-gray-50, .dark .border-gray-100, .dark .border-gray-200 { border-color: #334155 !important; }
+        .dark .bg-blue-50 { background-color: rgba(59,130,246,0.15) !important; }
+        .dark .border-blue-300 { border-color: rgba(59,130,246,0.3) !important; }
+        .dark [style*="color:#2b2c1e"], .dark [style*="color: #2b2c1e"] { color: #f8fafc !important; }
+        .dark [style*="background:#f5f5f0"], .dark [style*="background: #f5f5f0"] { background: #334155 !important; }
+        .dark [style*="color:#6b6b65"] { color: #94a3b8 !important; }
+        
         /* ─── Scrollbar ───────────────────────────── */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d0d0cc; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
     </style>
 </head>
 <body>
@@ -499,7 +579,12 @@ function renderSidebarHeader($title = "PT. Barongko Darma Logistik") {
                 <a href="<?= url('/profile') ?>" class="uname hover:underline block"><?= e($user['name'] ?? 'Operator') ?></a>
                 <span class="urole"><?= e(ucwords(str_replace('_', ' ', $user['role'] ?? ''))) ?></span>
             </div>
-            <a href="<?= url('/logout') ?>" title="Logout" class="text-gray-400 hover:text-red-500 transition-colors text-lg">
+            
+            <button onclick="toggleDarkMode()" title="Toggle Dark Mode" class="text-gray-400 hover:text-indigo-500 transition-colors text-lg ml-1" id="theme-toggle">
+                <i class="ri-moon-line" id="theme-toggle-icon"></i>
+            </button>
+
+            <a href="<?= url('/logout') ?>" title="Logout" class="text-gray-400 hover:text-red-500 transition-colors text-lg ml-2">
                 <i class="ri-logout-box-r-line"></i>
             </a>
         </div>
@@ -569,6 +654,24 @@ function renderSidebarFooter() {
         sidebar.classList.toggle('-translate-x-full');
         overlay.classList.toggle('hidden');
     }
+
+    // Toggle Dark Mode
+    function toggleDarkMode() {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
+        updateThemeIcon();
+    }
+    
+    function updateThemeIcon() {
+        const icon = document.getElementById('theme-toggle-icon');
+        if (!icon) return;
+        if (document.documentElement.classList.contains('dark')) {
+            icon.className = 'ri-sun-line text-yellow-500';
+        } else {
+            icon.className = 'ri-moon-line text-gray-400';
+        }
+    }
+    updateThemeIcon();
 
     // Set margin-left for main content on desktop
     function adjustLayout() {

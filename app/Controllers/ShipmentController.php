@@ -22,9 +22,12 @@ class ShipmentController extends Controller {
         
         $result = ['data' => [], 'total' => 0, 'last_page' => 1, 'current_page' => 1];
         
+        $errorMsg = null;
         try {
             $result = $shipmentModel->getPaginated($page, $perPage, $search, $status, $startDate, $endDate);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            $errorMsg = $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+        }
 
         $this->view('shipments/index', [
             'shipments' => $result['data'],
@@ -36,6 +39,69 @@ class ShipmentController extends Controller {
             'start_date' => $startDate,
             'end_date' => $endDate
         ]);
+    }
+    public function dataTable() {
+        require_auth();
+        $shipmentModel = new \App\Models\ShipmentModel();
+
+        $draw = (int)($_GET['draw'] ?? 1);
+        $start = (int)($_GET['start'] ?? 0);
+        $length = (int)($_GET['length'] ?? 10);
+        $search = '';
+        if (isset($_GET['search']) && is_array($_GET['search'])) {
+            $search = trim($_GET['search']['value'] ?? '');
+        } elseif (isset($_GET['search']) && is_string($_GET['search'])) {
+            $search = trim($_GET['search']);
+        }
+        $status = trim($_GET['status'] ?? '');
+        $startDate = trim($_GET['start_date'] ?? '');
+        $endDate = trim($_GET['end_date'] ?? '');
+
+        $page = ($length > 0) ? ($start / $length) + 1 : 1;
+        $perPage = $length > 0 ? $length : 10;
+
+        $result = ['data' => [], 'total' => 0];
+        $errorMsg = null;
+        try {
+            $result = $shipmentModel->getPaginated($page, $perPage, $search, $status, $startDate, $endDate);
+        } catch (\Throwable $e) {
+            $errorMsg = $e->getMessage();
+        }
+
+        $data = [];
+        foreach ($result['data'] as $item) {
+            $weight = (float)($item['weight_kg'] ?? 0);
+            $cost = (float)($item['total_cost'] ?? 0);
+            $data[] = [
+                'id' => $item['id'],
+                'resi_number' => e($item['resi_number'] ?? ''),
+                'sender' => '<div class="font-bold text-slate-900 dark:text-white">' . e($item['sender_name'] ?? '') . '</div><div class="text-xs text-gray-400 dark:text-gray-500">' . e($item['sender_phone'] ?? '') . '</div>',
+                'receiver' => '<div class="font-bold text-slate-900 dark:text-white">' . e($item['receiver_name'] ?? '') . '</div><div class="text-xs text-gray-400 dark:text-gray-500">' . e($item['receiver_phone'] ?? '') . '</div>',
+                'hubs' => '<div class="text-xs text-slate-600 dark:text-gray-300"><div><span class="text-gray-400 dark:text-gray-500">Asal:</span> ' . e($item['origin_hub_name'] ?? '-') . '</div><div><span class="text-gray-400 dark:text-gray-500">Tujuan:</span> ' . e($item['destination_hub_name'] ?? '-') . '</div></div>',
+                'weight_cost' => '<div class="text-xs"><div class="font-bold text-slate-900 dark:text-white">' . number_format($weight, 2) . ' kg</div><div class="text-emerald-700 dark:text-emerald-400 font-bold">' . format_rp($cost) . '</div></div>',
+                'status' => get_status_badge($item['status'] ?? ''),
+                'action' => '<div class="text-right space-x-2"><a href="' . url('/shipments/detail?id=' . $item['id']) . '" class="inline-flex items-center text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800">Detail</a> <a href="' . url('/shipments/label?id=' . $item['id']) . '" target="_blank" class="inline-flex items-center text-xs font-bold text-slate-800 dark:text-gray-200 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600"><i class="ri-printer-line mr-1"></i> Cetak</a></div>'
+            ];
+        }
+
+        // Clear any previous output (e.g. notices) to avoid breaking JSON
+        while (ob_get_level()) { ob_end_clean(); }
+
+        header('Content-Type: application/json');
+        $json = json_encode([
+            "draw" => $draw,
+            "recordsTotal" => $result['total'] ?? 0,
+            "recordsFiltered" => $result['total'] ?? 0,
+            "data" => $data,
+            "error" => $errorMsg
+        ], JSON_INVALID_UTF8_SUBSTITUTE);
+
+        if ($json === false) {
+            echo json_encode(["error" => "JSON Encoding Error: " . json_last_error_msg()]);
+        } else {
+            echo $json;
+        }
+        exit;
     }
 
     public function create() {
@@ -182,5 +248,115 @@ class ShipmentController extends Controller {
         $this->view('shipments/label', [
             'shipment' => $fullShipment
         ]);
+    }
+    public function export() {
+        require_auth();
+        $shipmentModel = new \App\Models\ShipmentModel();
+        
+        $search = trim($_GET['search'] ?? '');
+        $status = trim($_GET['status'] ?? '');
+        $startDate = trim($_GET['start_date'] ?? '');
+        $endDate = trim($_GET['end_date'] ?? '');
+        
+        // Fetch up to 10000 rows for export to avoid huge memory spike
+        $result = $shipmentModel->getPaginated(1, 10000, $search, $status, $startDate, $endDate);
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=Data_Pengiriman_' . date('Ymd_His') . '.csv');
+        $output = fopen('php://output', 'w');
+        
+        fputcsv($output, ['ID', 'No Resi', 'Pengirim', 'No HP Pengirim', 'Penerima', 'No HP Penerima', 'Hub Asal', 'Hub Tujuan', 'Berat (Kg)', 'Total Biaya', 'Status', 'Tanggal Dibuat']);
+        
+        foreach ($result['data'] as $row) {
+            fputcsv($output, [
+                $row['id'],
+                $row['resi_number'],
+                $row['sender_name'],
+                $row['sender_phone'],
+                $row['receiver_name'],
+                $row['receiver_phone'],
+                $row['origin_hub_name'] ?? '-',
+                $row['destination_hub_name'] ?? '-',
+                $row['weight_kg'],
+                $row['total_cost'],
+                $row['status'],
+                $row['created_at']
+            ]);
+        }
+        fclose($output);
+        exit;
+    }
+
+    public function bulkDelete() {
+        require_auth();
+        header('Content-Type: application/json');
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        $ids = $data['ids'] ?? [];
+        
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['status' => 'error', 'message' => 'Tidak ada data yang dipilih']);
+            exit;
+        }
+        
+        $shipmentModel = new \App\Models\ShipmentModel();
+        $successCount = 0;
+        
+        // Delete each item
+        foreach ($ids as $id) {
+            $id = (int)$id;
+            if ($id > 0) {
+                $shipmentModel->delete($id);
+                $successCount++;
+            }
+        }
+        
+        echo json_encode(['status' => 'success', 'message' => "$successCount resi berhasil dihapus"]);
+        exit;
+    }
+
+    public function importCSV() {
+        require_auth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_FILES['file']['tmp_name'])) {
+            $_SESSION['error_flash'] = "Silakan pilih file CSV terlebih dahulu.";
+            $this->redirect('/shipments');
+            return;
+        }
+
+        $file = $_FILES['file']['tmp_name'];
+        $handle = fopen($file, "r");
+        if ($handle !== FALSE) {
+            $header = fgetcsv($handle, 1000, ",");
+            $shipmentModel = new \App\Models\ShipmentModel();
+            $success = 0;
+            
+            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                // Expected basic CSV: Resi, Sender, SenderPhone, Receiver, ReceiverPhone, OriginHubId, DestHubId, Weight, Cost
+                if (count($data) >= 9) {
+                    try {
+                        $shipmentModel->create([
+                            'resi_number' => trim($data[0]),
+                            'sender_name' => trim($data[1]),
+                            'sender_phone' => trim($data[2]),
+                            'receiver_name' => trim($data[3]),
+                            'receiver_phone' => trim($data[4]),
+                            'origin_hub_id' => (int)$data[5],
+                            'current_hub_id' => (int)$data[5],
+                            'destination_hub_id' => (int)$data[6],
+                            'weight_kg' => (float)$data[7],
+                            'total_cost' => (float)$data[8],
+                            'status' => 'DRAFT',
+                            'created_by' => auth_user()['id'] ?? 1
+                        ]);
+                        $success++;
+                    } catch (\Throwable $e) {} // Skip on duplicate or error
+                }
+            }
+            fclose($handle);
+            $_SESSION['success_flash'] = "$success resi berhasil diimpor.";
+        } else {
+            $_SESSION['error_flash'] = "Gagal membaca file CSV.";
+        }
+        $this->redirect('/shipments');
     }
 }
