@@ -14,13 +14,20 @@ renderPublicHeader("Tracking Barang - Logistic Express");
 </style>
 
 <!-- Header Banner -->
-<div class="bg-slate-900 text-white py-12 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
-    <div class="max-w-4xl mx-auto text-center space-y-4">
-        <div class="inline-flex items-center space-x-2 bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border border-indigo-500/30">
+<div class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white pt-6 pb-12 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-slate-800 transition-colors duration-300 relative">
+    <!-- Login Link -->
+    <div class="absolute top-6 right-6 sm:right-8">
+        <a href="<?= url('/login') ?>" class="text-sm font-semibold text-gray-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors flex items-center gap-1">
+            <i class="ri-login-box-line text-lg"></i> <span class="hidden sm:inline">Login Dashboard</span>
+        </a>
+    </div>
+
+    <div class="max-w-4xl mx-auto text-center space-y-4 mt-6">
+        <div class="inline-flex items-center space-x-2 bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border border-indigo-200 dark:border-indigo-500/30">
             <i class="ri-radar-line"></i> Realtime Package Tracking
         </div>
         <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Lacak Lokasi & Status Paket Anda</h1>
-        <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">Masukkan Nomor Resi pengiriman Anda tanpa perlu login untuk memantau perjalanan paket secara realtime.</p>
+        <p class="text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl mx-auto">Masukkan Nomor Resi pengiriman Anda tanpa perlu login untuk memantau perjalanan paket secara realtime.</p>
         
         <!-- Search Box -->
         <form action="<?= url('/tracking') ?>" method="GET" class="mt-6 max-w-2xl mx-auto flex flex-col sm:flex-row gap-3">
@@ -28,9 +35,9 @@ renderPublicHeader("Tracking Barang - Logistic Express");
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                     <i class="ri-barcode-line text-xl"></i>
                 </div>
-                <input type="text" name="resi" value="<?= e($resi) ?>" required placeholder="Contoh: LOG-20260918-DEMO" class="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-800 text-white border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base placeholder-slate-500 shadow-inner">
+                <input type="text" name="resi" value="<?= e($resi) ?>" required placeholder="Contoh: LOG-20260918-DEMO" class="w-full pl-11 pr-4 py-3.5 rounded-xl bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base placeholder-gray-400 dark:placeholder-slate-500 shadow-inner transition-colors duration-300">
             </div>
-            <button type="submit" class="px-7 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2">
+            <button type="submit" class="px-7 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2">
                 <i class="ri-search-line text-lg"></i> Lacak Paket
             </button>
         </form>
