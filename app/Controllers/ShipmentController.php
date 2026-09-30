@@ -80,7 +80,9 @@ class ShipmentController extends Controller {
                 'hubs' => '<div class="text-xs text-slate-600 dark:text-gray-300"><div><span class="text-gray-400 dark:text-gray-500">Asal:</span> ' . e($item['origin_hub_name'] ?? '-') . '</div><div><span class="text-gray-400 dark:text-gray-500">Tujuan:</span> ' . e($item['destination_hub_name'] ?? '-') . '</div></div>',
                 'weight_cost' => '<div class="text-xs"><div class="font-bold text-slate-900 dark:text-white">' . number_format($weight, 2) . ' kg</div><div class="text-emerald-700 dark:text-emerald-400 font-bold">' . format_rp($cost) . '</div></div>',
                 'status' => get_status_badge($item['status'] ?? ''),
-                'action' => '<div class="text-right space-x-2"><a href="' . url('/shipments/detail?id=' . $item['id']) . '" class="inline-flex items-center text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800">Detail</a> <a href="' . url('/shipments/label?id=' . $item['id']) . '" target="_blank" class="inline-flex items-center text-xs font-bold text-slate-800 dark:text-gray-200 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600"><i class="ri-printer-line mr-1"></i> Cetak</a></div>'
+                'action' => '<div class="text-right space-x-2">'
+                    . (has_role('admin') ? '<a href="' . url('/shipments/edit?id=' . $item['id']) . '" class="inline-flex items-center text-xs font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800"><i class="ri-edit-line mr-1"></i> Edit</a>' : '')
+                    . '<a href="' . url('/shipments/detail?id=' . $item['id']) . '" class="inline-flex items-center text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800">Detail</a> <a href="' . url('/shipments/label?id=' . $item['id']) . '" target="_blank" class="inline-flex items-center text-xs font-bold text-slate-800 dark:text-gray-200 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600"><i class="ri-printer-line mr-1"></i> Cetak</a></div>'
             ];
         }
 
@@ -208,6 +210,108 @@ class ShipmentController extends Controller {
         } catch (\Throwable $e) {
             $_SESSION['error_flash'] = "Gagal menyimpan pengiriman: " . $e->getMessage();
             $this->redirect('/shipments/create');
+        }
+    }
+
+    public function edit() {
+        require_roles(['admin']);
+        $id = (int)($_GET['id'] ?? 0);
+        $shipmentModel = new ShipmentModel();
+        
+        $shipment = $shipmentModel->find($id);
+        if (!$shipment) {
+            $_SESSION['error_flash'] = "Resi tidak ditemukan.";
+            $this->redirect('/shipments');
+            return;
+        }
+
+        $hubModel = new HubModel();
+        $hubs = [];
+        try {
+            $hubs = $hubModel->findAll('name', 'ASC');
+        } catch (\Throwable $e) {}
+
+        $this->view('shipments/edit', [
+            'shipment' => $shipment,
+            'hubs' => $hubs
+        ]);
+    }
+
+    public function update() {
+        require_roles(['admin']);
+        
+        $id = (int)($_POST['id'] ?? 0);
+        $shipmentModel = new ShipmentModel();
+        $shipment = $shipmentModel->find($id);
+
+        if (!$shipment) {
+            $_SESSION['error_flash'] = "Resi tidak ditemukan.";
+            $this->redirect('/shipments');
+            return;
+        }
+
+        $senderName = trim($_POST['sender_name'] ?? '');
+        $senderPhone = standardize_phone($_POST['sender_phone'] ?? '');
+        $senderAddress = trim($_POST['sender_address'] ?? '');
+        $receiverName = trim($_POST['receiver_name'] ?? '');
+        $receiverPhone = standardize_phone($_POST['receiver_phone'] ?? '');
+        $receiverAddress = trim($_POST['receiver_address'] ?? '');
+        $originHubId = (int)($_POST['origin_hub_id'] ?? $shipment['origin_hub_id']);
+        $destinationHubId = (int)($_POST['destination_hub_id'] ?? $shipment['destination_hub_id']);
+        
+        // Process package items
+        $kemasanArr = $_POST['kemasan'] ?? [];
+        $koliItemArr = $_POST['koli_item'] ?? [];
+        $packageItems = [];
+        $totalKoli = 0;
+        
+        for ($i = 0; $i < count($kemasanArr); $i++) {
+            $kem = trim($kemasanArr[$i]);
+            $kol = (int)($koliItemArr[$i] ?? 1);
+            if (!empty($kem)) {
+                $packageItems[] = [
+                    'kemasan' => $kem,
+                    'koli' => $kol
+                ];
+                $totalKoli += $kol;
+            }
+        }
+        
+        $packageItemsJson = !empty($packageItems) ? json_encode($packageItems) : null;
+        if ($totalKoli === 0) $totalKoli = 1;
+
+        $weightKg = (float)($_POST['weight_kg'] ?? 1.0);
+        $totalCost = (float)($_POST['total_cost'] ?? 0.0);
+        $notes = trim($_POST['notes'] ?? '');
+
+        if (empty($senderName) || empty($receiverName) || empty($senderAddress) || empty($receiverAddress)) {
+            $_SESSION['error_flash'] = "Semua data pengirim & penerima wajib diisi.";
+            $this->redirect('/shipments/edit?id=' . $id);
+            return;
+        }
+
+        try {
+            $shipmentModel->update($id, [
+                'sender_name' => $senderName,
+                'sender_phone' => $senderPhone,
+                'sender_address' => $senderAddress,
+                'receiver_name' => $receiverName,
+                'receiver_phone' => $receiverPhone,
+                'receiver_address' => $receiverAddress,
+                'origin_hub_id' => $originHubId,
+                'destination_hub_id' => $destinationHubId,
+                'koli' => $totalKoli,
+                'package_items' => $packageItemsJson,
+                'weight_kg' => $weightKg,
+                'total_cost' => $totalCost,
+                'notes' => $notes
+            ]);
+
+            $_SESSION['success_flash'] = "Data resi berhasil diperbarui.";
+            $this->redirect('/shipments/detail?id=' . $id);
+        } catch (\Throwable $e) {
+            $_SESSION['error_flash'] = "Gagal memperbarui pengiriman: " . $e->getMessage();
+            $this->redirect('/shipments/edit?id=' . $id);
         }
     }
 

@@ -23,6 +23,12 @@ renderSidebarHeader("Detail Resi - " . ($shipment['resi_number'] ?? ''));
             </h1>
         </div>
         <div class="flex gap-3">
+            <?php if (has_role('admin')): ?>
+            <a href="<?= url('/shipments/edit?id=' . $shipment['id']) ?>"
+                class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md flex items-center gap-2">
+                <i class="ri-edit-line"></i> Edit Data
+            </a>
+            <?php endif; ?>
             <a href="<?= url('/shipments/label?id=' . $shipment['id']) ?>" target="_blank"
                 class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm shadow-md flex items-center gap-2">
                 <i class="ri-printer-line"></i> Cetak Tanda Terima Barang

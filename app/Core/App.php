@@ -34,6 +34,8 @@ class App {
         $this->router->get('/shipments/create', ['App\Controllers\ShipmentController', 'create']);
         $this->router->post('/shipments/store', ['App\Controllers\ShipmentController', 'store']);
         $this->router->get('/shipments/detail', ['App\Controllers\ShipmentController', 'detail']);
+        $this->router->get('/shipments/edit', ['App\Controllers\ShipmentController', 'edit']);
+        $this->router->post('/shipments/update', ['App\Controllers\ShipmentController', 'update']);
         $this->router->get('/shipments/label', ['App\Controllers\ShipmentController', 'printLabel']);
         $this->router->get('/shipments/barcode', ['App\Controllers\ShipmentController', 'barcode']);
         $this->router->get('/shipments/dataTable', ['App\Controllers\ShipmentController', 'dataTable']);
