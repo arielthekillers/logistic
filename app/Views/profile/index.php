@@ -76,7 +76,7 @@ $avatarUrl = !empty($user['avatar']) ? url('/' . $user['avatar']) : null;
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl" style="background:#f8f8f6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50">
                         <div>
                             <label class="form-label">Username</label>
                             <input type="text" value="<?= e($user['username']) ?>" readonly class="form-input" style="font-family:monospace">
