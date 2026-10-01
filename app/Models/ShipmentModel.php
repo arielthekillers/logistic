@@ -198,11 +198,16 @@ class ShipmentModel extends Model {
     }
 
     public function getDistinctSenders() {
-        $sql = "SELECT MAX(id) as id, sender_name, sender_phone, sender_address 
+        $sql = "SELECT MAX(id) as id, 
+                       TRIM(sender_name) as sender_name, 
+                       TRIM(COALESCE(sender_phone, '')) as sender_phone, 
+                       TRIM(COALESCE(sender_address, '')) as sender_address 
                 FROM shipments 
-                WHERE sender_name IS NOT NULL AND sender_name != '' 
-                GROUP BY sender_name, sender_phone, sender_address
-                ORDER BY sender_name ASC";
+                WHERE sender_name IS NOT NULL AND TRIM(sender_name) != '' 
+                GROUP BY TRIM(sender_name), 
+                         TRIM(COALESCE(sender_phone, '')), 
+                         TRIM(COALESCE(sender_address, ''))
+                ORDER BY TRIM(sender_name) ASC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
