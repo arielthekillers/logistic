@@ -61,19 +61,24 @@ $user = auth_user();
                     <i class="ri-user-shared-line text-emerald-600 dark:text-emerald-400"></i> Data Pengirim
                 </h4>
 
-                <div>
+                <div class="relative">
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nama Pengirim *</label>
-                    <input type="text" name="sender_name" value="<?= e($shipment['sender_name']) ?>" required autofocus class="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-slate-900 dark:text-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" name="sender_name" id="sender_name" value="<?= e($shipment['sender_name']) ?>" required autofocus class="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-slate-900 dark:text-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500" autocomplete="off">
+                    
+                    <!-- Autocomplete Dropdown -->
+                    <div id="autocomplete_dropdown" class="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
+                        <!-- Suggestions will be populated here -->
+                    </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">No. HP Pengirim *</label>
-                    <input type="text" name="sender_phone" value="<?= e($shipment['sender_phone']) ?>" required class="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-slate-900 dark:text-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" name="sender_phone" id="sender_phone" value="<?= e($shipment['sender_phone']) ?>" required class="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-slate-900 dark:text-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500">
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Alamat Lengkap Pengirim *</label>
-                    <textarea name="sender_address" required rows="3" class="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-slate-900 dark:text-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"><?= e($shipment['sender_address']) ?></textarea>
+                    <textarea name="sender_address" id="sender_address" required rows="3" class="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-slate-900 dark:text-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"><?= e($shipment['sender_address']) ?></textarea>
                 </div>
             </div>
 
@@ -214,4 +219,102 @@ $user = auth_user();
 
     // Initialize
     updateRemoveButtons();
+
+    const customersData = <?= json_encode($customers) ?>;
+    const senderNameInput = document.getElementById('sender_name');
+    const autocompleteDropdown = document.getElementById('autocomplete_dropdown');
+    let currentFocus = -1;
+    let currentMatches = [];
+    
+    senderNameInput.addEventListener('input', function() {
+        const val = this.value.toLowerCase().trim();
+        autocompleteDropdown.innerHTML = '';
+        currentFocus = -1;
+        currentMatches = [];
+        
+        if (!val) {
+            autocompleteDropdown.classList.add('hidden');
+            return;
+        }
+
+        currentMatches = customersData.filter(c => 
+            c.sender_name.toLowerCase().includes(val) || 
+            c.sender_phone.includes(val)
+        );
+
+        if (currentMatches.length > 0) {
+            currentMatches.forEach((customer, index) => {
+                const div = document.createElement('div');
+                div.id = 'autocomplete-item-' + index;
+                div.className = 'px-4 py-3 cursor-pointer hover:bg-emerald-50 dark:hover:bg-slate-700 border-b border-gray-100 dark:border-slate-700 last:border-0 transition-colors autocomplete-item';
+                div.innerHTML = `
+                    <div class="font-bold text-sm text-slate-900 dark:text-white">${customer.sender_name}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-3 mt-1">
+                        <span><i class="ri-phone-line"></i> ${customer.sender_phone}</span>
+                        <span class="truncate"><i class="ri-map-pin-line"></i> ${customer.sender_address}</span>
+                    </div>
+                `;
+                div.addEventListener('click', function() {
+                    senderNameInput.value = customer.sender_name;
+                    document.getElementById('sender_phone').value = customer.sender_phone;
+                    document.getElementById('sender_address').value = customer.sender_address;
+                    autocompleteDropdown.classList.add('hidden');
+                });
+                autocompleteDropdown.appendChild(div);
+            });
+            autocompleteDropdown.classList.remove('hidden');
+        } else {
+            autocompleteDropdown.classList.add('hidden');
+        }
+    });
+
+    senderNameInput.addEventListener('keydown', function(e) {
+        let items = autocompleteDropdown.getElementsByClassName('autocomplete-item');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            currentFocus++;
+            addActive(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            currentFocus--;
+            addActive(items);
+        } else if (e.key === 'Enter') {
+            if (currentFocus > -1) {
+                e.preventDefault();
+                if (items[currentFocus]) {
+                    items[currentFocus].click();
+                }
+            }
+        }
+    });
+
+    function addActive(items) {
+        if (!items) return false;
+        removeActive(items);
+        if (currentFocus >= items.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (items.length - 1);
+        items[currentFocus].classList.add('bg-emerald-50', 'dark:bg-slate-700');
+        items[currentFocus].scrollIntoView({ block: 'nearest' });
+    }
+
+    function removeActive(items) {
+        for (let i = 0; i < items.length; i++) {
+            items[i].classList.remove('bg-emerald-50', 'dark:bg-slate-700');
+        }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target !== senderNameInput && e.target !== autocompleteDropdown && !autocompleteDropdown.contains(e.target)) {
+            autocompleteDropdown.classList.add('hidden');
+        }
+    });
+
+    // Show suggestions on focus if there's text
+    senderNameInput.addEventListener('focus', function() {
+        if (this.value.trim() !== '') {
+            const event = new Event('input');
+            this.dispatchEvent(event);
+        }
+    });
 </script>

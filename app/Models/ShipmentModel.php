@@ -196,4 +196,15 @@ class ShipmentModel extends Model {
         
         return $trend;
     }
+
+    public function getDistinctSenders() {
+        $sql = "SELECT MAX(id) as id, sender_name, sender_phone, sender_address 
+                FROM shipments 
+                WHERE sender_name IS NOT NULL AND sender_name != '' 
+                GROUP BY sender_name, sender_phone, sender_address
+                ORDER BY sender_name ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

@@ -109,17 +109,20 @@ class ShipmentController extends Controller {
     public function create() {
         require_auth();
         $hubModel = new HubModel();
+        $shipmentModel = new ShipmentModel();
         
         $hubs = [];
         try {
             $hubs = $hubModel->findAll('name', 'ASC');
         } catch (\Throwable $e) {}
 
+        $customers = $shipmentModel->getDistinctSenders();
         $autoResi = generate_resi_number();
 
         $this->view('shipments/create', [
             'hubs' => $hubs,
-            'autoResi' => $autoResi
+            'autoResi' => $autoResi,
+            'customers' => $customers
         ]);
     }
 
@@ -231,9 +234,12 @@ class ShipmentController extends Controller {
             $hubs = $hubModel->findAll('name', 'ASC');
         } catch (\Throwable $e) {}
 
+        $customers = $shipmentModel->getDistinctSenders();
+
         $this->view('shipments/edit', [
             'shipment' => $shipment,
-            'hubs' => $hubs
+            'hubs' => $hubs,
+            'customers' => $customers
         ]);
     }
 
