@@ -198,18 +198,42 @@ class ShipmentModel extends Model {
     }
 
     public function getDistinctSenders() {
-        $sql = "SELECT MAX(id) as id, 
-                       TRIM(sender_name) as sender_name, 
-                       TRIM(COALESCE(sender_phone, '')) as sender_phone, 
-                       TRIM(COALESCE(sender_address, '')) as sender_address 
+        // Fetch raw grouped data first to reduce PHP workload
+        $sql = "SELECT MAX(id) as id, sender_name, sender_phone, sender_address 
                 FROM shipments 
                 WHERE sender_name IS NOT NULL AND TRIM(sender_name) != '' 
-                GROUP BY TRIM(sender_name), 
-                         TRIM(COALESCE(sender_phone, '')), 
-                         TRIM(COALESCE(sender_address, ''))
-                ORDER BY TRIM(sender_name) ASC";
+                GROUP BY sender_name, sender_phone, sender_address
+                ORDER BY MAX(id) DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rawRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $unique = [];
+        $seen = [];
+
+        foreach ($rawRows as $row) {
+            // Deep normalize for comparison: lowercase, remove punctuation, squash multiple spaces
+            $normName = trim(preg_replace('/\s+/', ' ', strtolower(preg_replace('/[^a-zA-Z0-9\s]/', ' ', $row['sender_name']))));
+            $normPhone = preg_replace('/[^0-9]/', '', $row['sender_phone'] ?? '');
+            $normAddr = trim(preg_replace('/\s+/', ' ', strtolower(preg_replace('/[^a-zA-Z0-9\s]/', ' ', $row['sender_address'] ?? ''))));
+            
+            $key = $normName . '|' . $normPhone . '|' . $normAddr;
+            
+            if (!isset($seen[$key])) {
+                $seen[$key] = true;
+                // Keep the original formatted string for UI
+                $row['sender_name'] = trim(preg_replace('/\s+/', ' ', $row['sender_name']));
+                $row['sender_phone'] = trim($row['sender_phone'] ?? '');
+                $row['sender_address'] = trim(preg_replace('/\s+/', ' ', $row['sender_address'] ?? ''));
+                $unique[] = $row;
+            }
+        }
+        
+        // Sort alphabetically by name
+        usort($unique, function($a, $b) {
+            return strcasecmp($a['sender_name'], $b['sender_name']);
+        });
+
+        return $unique;
     }
 }
