@@ -44,7 +44,17 @@ $greet  = $hour < 11 ? 'Selamat Pagi' : ($hour < 15 ? 'Selamat Siang' : ($hour <
 
     <!-- ─── Stat Cards ───────────────────────────────────── -->
     <?php if (!has_role('courier')): ?>
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+
+        <div class="card card-hover p-5 flex items-center gap-4 dark:bg-slate-800 dark:border-slate-700">
+            <div class="stat-icon bg-purple-50 dark:bg-purple-900/30">
+                <i class="ri-file-list-3-line text-purple-600 dark:text-purple-400 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Resi</p>
+                <h3 class="text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-0.5"><?= number_format($counts['TOTAL'] ?? 0) ?></h3>
+            </div>
+        </div>
 
         <div class="card card-hover p-5 flex items-center gap-4 dark:bg-slate-800 dark:border-slate-700">
             <div class="stat-icon bg-gray-100 dark:bg-slate-700">
@@ -235,6 +245,70 @@ $greet  = $hour < 11 ? 'Selamat Pagi' : ($hour < 15 ? 'Selamat Siang' : ($hour <
         </div>
     </div>
 </div>
+
+<?php if (!has_role('courier')): ?>
+    <!-- ─── Client / Sender Stats ───────────────────────── -->
+    <div class="card p-6 mt-6 mb-6 dark:bg-slate-800 dark:border-slate-700">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div>
+                <h2 class="font-bold text-gray-900 dark:text-white text-[15px]">Statistik Pengiriman per Klien/Pengirim</h2>
+                <p class="text-xs text-gray-400 mt-0.5">Top 20 Pengirim berdasarkan Total Berat (Kg)</p>
+            </div>
+            
+            <form method="GET" action="<?= url('/dashboard') ?>" class="flex items-center gap-2">
+                <?php if (isset($_GET['hub_id'])): ?>
+                    <input type="hidden" name="hub_id" value="<?= e($_GET['hub_id']) ?>">
+                <?php endif; ?>
+                <select name="month" class="bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-gray-200">
+                    <option value="">Semua Bulan</option>
+                    <?php 
+                    $months = ['1'=>'Januari', '2'=>'Februari', '3'=>'Maret', '4'=>'April', '5'=>'Mei', '6'=>'Juni', '7'=>'Juli', '8'=>'Agustus', '9'=>'September', '10'=>'Oktober', '11'=>'November', '12'=>'Desember'];
+                    foreach ($months as $m => $mName): 
+                    ?>
+                        <option value="<?= $m ?>" <?= (($_GET['month']??'') == $m) ? 'selected' : '' ?>><?= $mName ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <select name="year" class="bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-gray-200">
+                    <option value="">Semua Tahun</option>
+                    <?php 
+                    $currentYear = date('Y');
+                    for ($y = $currentYear; $y >= $currentYear - 3; $y--): 
+                    ?>
+                        <option value="<?= $y ?>" <?= (($_GET['year']??'') == $y) ? 'selected' : '' ?>><?= $y ?></option>
+                    <?php endfor; ?>
+                </select>
+                <button type="submit" class="btn-primary py-1.5 px-3 text-sm">Filter</button>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="data-table w-full text-left border-collapse">
+                <thead class="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-xs uppercase">
+                    <tr>
+                        <th class="px-4 py-3">Nama Klien / Pengirim</th>
+                        <th class="px-4 py-3 !text-right" style="text-align: right;">Total Resi</th>
+                        <th class="px-4 py-3 !text-right" style="text-align: right;">Total Berat (Kg)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+                    <?php if (empty($stats['sender_stats'])): ?>
+                        <tr>
+                            <td colspan="3" class="py-6 text-center text-gray-400">Belum ada data klien/pengirim.</td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($stats['sender_stats'] as $stat): ?>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                                <td class="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100"><?= e($stat['client_name']) ?></td>
+                                <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-300"><?= number_format($stat['total_shipments']) ?></td>
+                                <td class="px-4 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400"><?= number_format($stat['total_weight'], 1) ?> kg</td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+<?php endif; ?>
 
 <?php if (!has_role('courier')): ?>
 <!-- Chart.js -->

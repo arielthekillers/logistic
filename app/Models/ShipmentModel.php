@@ -236,4 +236,38 @@ class ShipmentModel extends Model {
 
         return $unique;
     }
+
+    public function getSenderStats($month = null, $year = null, $hubId = null) {
+        $sql = "SELECT 
+                    MAX(sender_name) as client_name, 
+                    COUNT(id) as total_shipments, 
+                    SUM(weight_kg) as total_weight
+                FROM shipments 
+                WHERE sender_name IS NOT NULL AND TRIM(sender_name) != ''";
+        
+        $params = [];
+        
+        if ($month) {
+            $sql .= " AND MONTH(created_at) = ?";
+            $params[] = $month;
+        }
+        
+        if ($year) {
+            $sql .= " AND YEAR(created_at) = ?";
+            $params[] = $year;
+        }
+        
+        if ($hubId !== null) {
+            $sql .= " AND (origin_hub_id = ? OR current_hub_id = ? OR destination_hub_id = ?)";
+            $params[] = $hubId;
+            $params[] = $hubId;
+            $params[] = $hubId;
+        }
+        
+        $sql .= " GROUP BY LOWER(TRIM(sender_name)) ORDER BY total_weight DESC LIMIT 20";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

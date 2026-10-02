@@ -29,6 +29,7 @@ class DashboardController extends Controller {
             'total_users' => 0,
             'today_count' => 0,
             'active_by_hub' => [],
+            'sender_stats' => [],
         ];
 
         $useRedis = false;
@@ -60,7 +61,11 @@ class DashboardController extends Controller {
             $hubId = $user['hub_id'] ?? null;
         }
         
-        $cacheKey = $isAdmin ? ('dashboard_stats_admin_' . ($hubId ?: 'all')) : 'dashboard_stats_hub_' . $hubId;
+        $filterMonth = $_GET['month'] ?? '';
+        $filterYear = $_GET['year'] ?? '';
+        $cacheSuffix = "_m{$filterMonth}_y{$filterYear}";
+        
+        $cacheKey = $isAdmin ? ('dashboard_stats_admin_' . ($hubId ?: 'all') . $cacheSuffix) : ('dashboard_stats_hub_' . $hubId . $cacheSuffix);
 
         if ($useRedis && $redis->exists($cacheKey)) {
             $stats = json_decode($redis->get($cacheKey), true);
@@ -73,6 +78,7 @@ class DashboardController extends Controller {
                 $stats['today_count'] = $shipmentModel->getTodayCount($hubId);
                 $stats['active_by_hub'] = $shipmentModel->getActiveShipmentsByHub();
                 $stats['weekly_trend'] = $shipmentModel->getWeeklyTrend($hubId);
+                $stats['sender_stats'] = $shipmentModel->getSenderStats($filterMonth ?: null, $filterYear ?: null, $hubId);
 
                 if ($useRedis) {
                     $redis->setex($cacheKey, 300, json_encode($stats)); // Cache for 5 minutes
